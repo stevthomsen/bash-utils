@@ -7,6 +7,15 @@ Usage(){
     echo "Usage: $0 src dest"
 }
 
+copyFunc() {
+    if ! cmp $1 $2 >/dev/null 2>&1
+    then
+	echo "Copying $1 to $2, since they differ"
+	status=`cp $1 $2`
+	exit $status
+    fi
+}
+
 if [[ $# -ne 2 ]]; then
     Usage
     exit 101
@@ -26,8 +35,8 @@ fi
 
 if [ -d $2 ]; then
     # copy over to existing directory. return cp status
-    echo "Copying $1 to existing directory $2"
-    status=`cp $1 $2`
+    #echo "Check copying $1 to existing directory $2"
+    copyFunc $1 $2/$1
     exit $status
 fi
 
