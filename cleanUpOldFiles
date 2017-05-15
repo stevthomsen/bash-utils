@@ -1,0 +1,108 @@
+#! /bin/bash
+
+#set -x
+#set -o functrace
+
+dryrun=0
+dir_to_clean=
+max_stale_days=
+glob_pattern='*'
+MIN_ARGS=2
+
+cleanUp(){
+    local dir="${1}"
+    local glob=${2}
+    local days_stale="${3}"
+    local dry="${4}"
+
+    if [[ "${dry}" -ne 0 ]];then
+        find "${dir}" -mindepth 1 -maxdepth 1 -mtime "+${days_stale}" -name "${glob}" -exec echo \{\} \;
+    else
+        find "${dir}" -mindepth 1 -maxdepth 1 -mtime "+${days_stale}" -name "${glob}" -exec rm -rf \{\} \;
+    fi
+}
+
+usage(){
+    echo "Usage: $0"
+    echo "             -d <PATH>"
+    echo "             -o <DAYS>"
+    echo "             <-p <GLOB>>"
+    echo "             <-n>"
+    echo
+    echo "  Required Arugments:"
+    echo "      -d | --dir                  Directory to clean."
+    echo
+    echo "      -o | --days-older           Delete directories older than X days."
+    echo "                                   Note: X must be a positive integrer value."
+    echo
+    echo "  Optional Arguments:"
+    echo "      -p | --pattern              Glob pattern of which directories/files to match."
+    echo "                                    default: '${glob_pattern}'"
+    echo
+    echo "      -n | --dry-run              Only perform a dry run and do not delete anything."
+    echo
+    echo "  All paths need to be fully qualified (absolute paths)."
+
+}
+
+if [[ $# -lt ${MIN_ARGS} ]]; then
+    usage
+    exit 2
+fi
+
+while [[ $# -gt 0 ]]; do
+    switch="$1"
+    case $switch in
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        -d|--dir)
+            if [[ ! -d "$2" ]]; then
+                echo "-d | --dir: directory path '$2' does not exist."
+                exit 2
+            fi
+            if [[ "x${2//\//}" == "x" ]]; then
+                echo "-d | --dir: refusing to operate on '$2'."
+                exit 2
+            fi
+            dir_to_clean="$2"
+            shift
+            ;;
+        -o|--days-older)
+            d="${2#+}"
+            case $d in
+                ''|*[!0-9]*)
+                    echo "-o | --days-older: number of days must be a positive integrer."
+                    exit 2
+                    ;;
+            esac
+            max_stale_days="$d"
+            shift
+            ;;
+        -p|--pattern)
+	    glob_pattern="$2"
+            shift
+            ;;
+        -n|--dry-run)
+	    dryrun=1
+            shift
+            ;;
+        *)
+            echo "unknown option '${switch}\n'."
+            usage
+            exit 2
+            ;;
+    esac
+    shift    
+done
+
+cleanUp "${dir_to_clean}" "${glob_pattern}" "${max_stale_days}" "${dryrun}"
+stat=$?
+if [[ $stat -ne 0 ]]; then
+    echo "failed to clean '${dir_to_clean}' of files matching '${glob_pattern}' older than '${max_stale_days}'."
+    exit 1
+fi
+
+exit 0
+
