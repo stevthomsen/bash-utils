@@ -1,0 +1,64 @@
+#! /bin/bash
+
+#set -x
+#set -o functrace
+
+MIN_ARGS=1
+dir_o_watch=
+
+watchDir(){
+    local dir="${1}"
+
+    inotifywait -m ${dir} -e create -e moved_to -e close_write -e delete|
+    while read path action file; do
+        echo "The file '$file' appeared in directory '$path' via '$action'"
+        # do something with the file
+    done
+}
+
+usage(){
+    echo "Usage: $0"
+    echo "             -d <PATH>"
+    echo "             <-h>"
+    echo
+    echo "      -d | --dir              Directory to watch."
+    echo
+    echo "      -h | --help             Output Usage"
+
+}
+
+if [[ $# -lt ${MIN_ARGS} ]]; then
+    usage
+    exit 2
+fi
+
+while [[ $# -gt 0 ]]; do
+    switch="$1"
+    case $switch in
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        -d|--dir)
+            if [[ ! -d "$2" ]]; then
+                echo "-d | --dir: directory path '$2' does not exist."
+                exit 2
+            fi
+            if [[ "x${2//\//}" == "x" ]]; then
+                echo "-d | --dir: refusing to operate on '$2'."
+                exit 2
+            fi
+            dir_to_watch="$2"
+            shift
+            ;;
+        *)
+            echo "unknown option '${switch}\n'."
+            usage
+            exit 2
+            ;;
+    esac
+    shift    
+done
+
+watchDir ${dir_to_watch}
+
