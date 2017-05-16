@@ -1,0 +1,21 @@
+#! /bin/bash
+
+#set -x
+#set -o functrace
+
+usage(){
+    echo "Usage: $0 item-to-check"
+}
+
+if [[ $# -ne 1 ]]; then
+    usage
+    exit 1
+fi
+
+if [ ! -e $1 ]; then
+   echo "$1 does not exist"
+   exit 2
+fi
+
+git log $1 | fgrep commit | head -2 | tail -1 | awk '{print $2}'
+
