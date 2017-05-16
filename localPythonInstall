@@ -1,0 +1,28 @@
+#! /bin/bash
+
+#set -x
+#set -o functrace
+
+setupFile=setup.py
+
+Usage(){
+    echo "Usage: $0 [optional-install-file]"
+    echo "       default install-file is setup.py"
+}
+
+if [[ $# -gt 1 ]]; then
+    Usage
+    exit 101
+fi
+
+if [[ $# -eq 1 ]]; then
+    if [ ! -e $1 ]; then
+	echo "$1 does not exist"
+	exit 102
+    fi
+    setupFile=$1
+fi
+
+python $setupFile install --user
+
+exit $?
