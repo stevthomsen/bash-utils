@@ -1,0 +1,15 @@
+#! /bin/bash
+
+#set -x
+#set -o functrace
+
+echo "Doing git config --global credential.username first.last@hp.com"
+git config --global credential.username steven.thomsen@hp.com
+echo 'Doing git config --global credential.helper "cache --timeout=28800"'
+git config --global credential.helper "cache --timeout=28800"
+
+echo 'Existing repositories cloned over SSH can be changed to use the HTTPS URLs:'
+echo
+echo 'git remote set-url origin https://github.azc.ext.hp.com/USERNAME/REPOSITORY.git'
+echo 'get remote -v'
+
